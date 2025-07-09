@@ -17,6 +17,7 @@
 #include <zmk/event_manager.h>
 #include <zmk/events/position_state_changed.h>
 #include <zmk/usb_hid.h>
+#include <zmk/matrix.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
@@ -27,7 +28,9 @@ static bool gaming_mode_active = true;
 static struct zmk_gaming_keyboard_report gaming_reports[ZMK_GAMING_DEVICE_COUNT];
 
 // Track which keys are currently pressed in gaming HID (position -> key mapping)
-static uint8_t gaming_pressed_keys[ZMK_KEYMAP_LEN];
+// Use a reasonable max size since ZMK_KEYMAP_LEN might not be available here
+#define GAMING_MAX_POSITIONS 64
+static uint8_t gaming_pressed_keys[GAMING_MAX_POSITIONS];
 
 // We'll use ZMK's existing USB HID infrastructure
 
@@ -212,7 +215,7 @@ struct zmk_gaming_keyboard_report *zmk_hid_gaming_get_keyboard_report(uint8_t de
 
 // Position-based gaming HID handling with tracking
 int zmk_hid_gaming_position_press(uint32_t position, zmk_key_t key) {
-    if (position >= ZMK_KEYMAP_LEN) {
+    if (position >= GAMING_MAX_POSITIONS) {
         return -EINVAL;
     }
     
@@ -225,7 +228,7 @@ int zmk_hid_gaming_position_press(uint32_t position, zmk_key_t key) {
 }
 
 int zmk_hid_gaming_position_release(uint32_t position) {
-    if (position >= ZMK_KEYMAP_LEN) {
+    if (position >= GAMING_MAX_POSITIONS) {
         return -EINVAL;
     }
     

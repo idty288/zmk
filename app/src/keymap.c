@@ -769,9 +769,6 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
             const struct zmk_behavior_binding *binding =
                 zmk_keymap_get_layer_binding_at_idx(layer_id, position);
             
-            // Get the device for this position
-            uint8_t device_id = zmk_hid_gaming_get_device_for_position(position);
-            
             // Check if this is a simple key press behavior (&kp) - route to gaming HID
             if (binding->behavior_dev && 
                 (strstr(binding->behavior_dev, "key_press") != NULL)) {
