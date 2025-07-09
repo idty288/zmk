@@ -748,8 +748,13 @@ int zmk_keymap_position_state_changed(uint8_t source, uint32_t position, bool pr
 int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, bool pressed,
                                            int64_t timestamp) {
     // Handle gaming HID routing - ONLY gaming HID, no normal processing
+    // Use the same layer state logic as normal keymap to ensure press/release consistency
+    uint32_t layer_state_to_use;
     if (pressed) {
         zmk_keymap_active_behavior_layer[position] = _zmk_keymap_layer_state;
+        layer_state_to_use = _zmk_keymap_layer_state;
+    } else {
+        layer_state_to_use = zmk_keymap_active_behavior_layer[position];
     }
 
     // Process through normal keymap to get the key that would be sent
@@ -760,8 +765,7 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
         if (layer_id == ZMK_KEYMAP_LAYER_ID_INVAL) {
             continue;
         }
-        if (zmk_keymap_layer_active_with_state(layer_id,
-                                               zmk_keymap_active_behavior_layer[position])) {
+        if (zmk_keymap_layer_active_with_state(layer_id, layer_state_to_use)) {
             const struct zmk_behavior_binding *binding =
                 zmk_keymap_get_layer_binding_at_idx(layer_id, position);
             
