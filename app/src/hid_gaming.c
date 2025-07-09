@@ -76,9 +76,17 @@ static int zmk_hid_gaming_send_report(uint8_t device_id) {
     }
 
 #if IS_ENABLED(CONFIG_ZMK_USB)
-    // For now, we'll use the existing keyboard report mechanism
-    // In the future, this could send custom reports with different report IDs
-    return zmk_usb_hid_send_keyboard_report();
+    // Send the gaming report with the specific report ID
+    struct zmk_gaming_keyboard_report *report = &gaming_reports[device_id];
+    
+    // Make sure report ID is set correctly
+    report->report_id = ZMK_HID_GAMING_REPORT_ID_LEFT_HALF + device_id;
+    
+    // Send the report through the USB HID endpoint
+    size_t report_size = sizeof(struct zmk_gaming_keyboard_report);
+    
+    // Use ZMK's USB HID send function - this will send our custom report
+    return zmk_usb_hid_send_report((uint8_t *)report, report_size);
 #else
     return 0;
 #endif
@@ -117,12 +125,6 @@ int zmk_hid_gaming_keyboard_press(uint8_t device_id, zmk_key_t key) {
         }
         if (report->body.keys[i] == 0) {
             report->body.keys[i] = key;
-            
-            // For the initial implementation, also register with the standard HID system
-            // This ensures the keys still work while we develop the multi-device functionality
-#if IS_ENABLED(CONFIG_ZMK_USB)
-            zmk_hid_keyboard_press(key);
-#endif
             return zmk_hid_gaming_send_report(device_id);
         }
     }
@@ -145,11 +147,6 @@ int zmk_hid_gaming_keyboard_release(uint8_t device_id, zmk_key_t key) {
                 report->body.keys[j] = report->body.keys[j + 1];
             }
             report->body.keys[ZMK_GAMING_MAX_KEYS_PER_DEVICE - 1] = 0;
-            
-            // Also release from standard HID system
-#if IS_ENABLED(CONFIG_ZMK_USB)
-            zmk_hid_keyboard_release(key);
-#endif
             return zmk_hid_gaming_send_report(device_id);
         }
     }
