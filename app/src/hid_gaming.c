@@ -75,10 +75,13 @@ static int zmk_hid_gaming_send_report(uint8_t device_id) {
         return -EINVAL;
     }
 
-    // For now, we'll integrate with ZMK's existing HID sending mechanism
-    // This is a simplified implementation that sends through the standard HID endpoint
-    // In the future, this could be enhanced to use separate report IDs
-    return 0; // Success placeholder
+#if IS_ENABLED(CONFIG_ZMK_USB)
+    // For now, we'll use the existing keyboard report mechanism
+    // In the future, this could send custom reports with different report IDs
+    return zmk_usb_hid_send_keyboard_report();
+#else
+    return 0;
+#endif
 }
 
 // Gaming mode control
@@ -114,6 +117,12 @@ int zmk_hid_gaming_keyboard_press(uint8_t device_id, zmk_key_t key) {
         }
         if (report->body.keys[i] == 0) {
             report->body.keys[i] = key;
+            
+            // For the initial implementation, also register with the standard HID system
+            // This ensures the keys still work while we develop the multi-device functionality
+#if IS_ENABLED(CONFIG_ZMK_USB)
+            zmk_hid_keyboard_press(key);
+#endif
             return zmk_hid_gaming_send_report(device_id);
         }
     }
@@ -136,6 +145,11 @@ int zmk_hid_gaming_keyboard_release(uint8_t device_id, zmk_key_t key) {
                 report->body.keys[j] = report->body.keys[j + 1];
             }
             report->body.keys[ZMK_GAMING_MAX_KEYS_PER_DEVICE - 1] = 0;
+            
+            // Also release from standard HID system
+#if IS_ENABLED(CONFIG_ZMK_USB)
+            zmk_hid_keyboard_release(key);
+#endif
             return zmk_hid_gaming_send_report(device_id);
         }
     }
@@ -215,5 +229,4 @@ static int zmk_hid_gaming_init(void) {
     return 0;
 }
 
-// Temporarily comment out SYS_INIT for debugging
-// SYS_INIT(zmk_hid_gaming_init, APPLICATION, 96);
+SYS_INIT(zmk_hid_gaming_init, APPLICATION, 96);

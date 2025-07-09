@@ -27,6 +27,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/hid_gaming.h>
 #include <zmk/hid.h>
 #include <zmk/usb_hid.h>
+#include <zmk/keys.h>
 #endif // CONFIG_ZMK_HID_GAMING
 
 static zmk_keymap_layers_state_t _zmk_keymap_layer_state = 0;
@@ -761,14 +762,34 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
         }
         if (zmk_keymap_layer_active_with_state(layer_id,
                                                zmk_keymap_active_behavior_layer[position])) {
-            // In gaming mode, we route position events to gaming HID devices
-            // For simplicity, we handle most keys through the gaming system
+            // In gaming mode, we attempt to route specific key events to gaming devices
+            const struct zmk_behavior_binding *binding =
+                zmk_keymap_get_layer_binding_at_idx(layer_id, position);
+            
+            // Get the device for this position
             uint8_t device_id = zmk_hid_gaming_get_device_for_position(position);
             
-            // For now, we'll fall back to normal processing but log the gaming mode
-            LOG_DBG("Gaming mode: position %d routed to device %d", position, device_id);
+            // Check if this looks like a simple key press (most behaviors will fall through)
+            // We can expand this logic later to handle more behavior types
+            if (binding->param1 > 0 && binding->param1 < 256) {
+                // This looks like it could be a key code, attempt gaming HID routing
+                LOG_DBG("Gaming mode: position %d -> device %d, key %d", position, device_id, binding->param1);
+                
+                int ret;
+                if (pressed) {
+                    ret = zmk_hid_gaming_keyboard_press(device_id, binding->param1);
+                } else {
+                    ret = zmk_hid_gaming_keyboard_release(device_id, binding->param1);
+                }
+                
+                if (ret == 0) {
+                    // Successfully handled by gaming system
+                    return 0;
+                }
+                // If gaming system fails, fall through to normal processing
+            }
             
-            // Fall back to normal processing for now
+            // Fall back to normal processing
             int ret = zmk_keymap_apply_position_state(source, layer_id, position, pressed, timestamp);
             if (ret > 0) {
                 LOG_DBG("behavior processing to continue to next layer");
