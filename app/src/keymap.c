@@ -770,9 +770,11 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
                 zmk_keymap_get_layer_binding_at_idx(layer_id, position);
             
             // Check if this is a simple key press behavior (&kp) - route to gaming HID
+            // BUT only for basic layer 0 and gaming layer 1 to avoid interfering with symbol layers
             if (binding->behavior_dev && 
-                (strstr(binding->behavior_dev, "key_press") != NULL)) {
-                // This is a &kp behavior - route to gaming HID with position tracking
+                (strstr(binding->behavior_dev, "key_press") != NULL) &&
+                (layer_id == 0 || layer_id == 1)) {
+                // This is a &kp behavior on base or gaming layer - route to gaming HID with position tracking
                 int ret;
                 if (pressed) {
                     ret = zmk_hid_gaming_position_press(position, binding->param1);

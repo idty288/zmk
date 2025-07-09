@@ -18,14 +18,22 @@
 #define ZMK_HID_GAMING_REPORT_ID_GROUP_HJ     0x12
 #define ZMK_HID_GAMING_REPORT_ID_GROUP_NM     0x13
 #define ZMK_HID_GAMING_REPORT_ID_GROUP_REST   0x14
+#define ZMK_HID_GAMING_REPORT_ID_THUMBS       0x15
 
-// Gaming device indices
-#define ZMK_GAMING_DEVICE_LEFT_HALF    0
-#define ZMK_GAMING_DEVICE_GROUP_YU     1
-#define ZMK_GAMING_DEVICE_GROUP_HJ     2
-#define ZMK_GAMING_DEVICE_GROUP_NM     3
-#define ZMK_GAMING_DEVICE_GROUP_REST   4
-#define ZMK_GAMING_DEVICE_COUNT        5
+// Gaming device indices - corrected grouping as requested:
+// Device 0: Left hand alphas [q,w,e,r,t,a,s,d,f,g,z,x,c,v,b] 
+// Device 1: Right index top [y,u]
+// Device 2: Right index home [h,j]
+// Device 3: Right index bottom [n,m]
+// Device 4: Rest of right side [i,o,p,k,l,',,,.,/]
+// Device 5: Both thumb clusters (left + right)
+#define ZMK_GAMING_DEVICE_LEFT_HALF    0  // Left hand alphas
+#define ZMK_GAMING_DEVICE_GROUP_YU     1  // Right index [y,u]
+#define ZMK_GAMING_DEVICE_GROUP_HJ     2  // Right index [h,j]
+#define ZMK_GAMING_DEVICE_GROUP_NM     3  // Right index [n,m]
+#define ZMK_GAMING_DEVICE_GROUP_REST   4  // Rest of right side
+#define ZMK_GAMING_DEVICE_THUMBS       5  // Both thumb clusters
+#define ZMK_GAMING_DEVICE_COUNT        6
 
 // Maximum keys per gaming device
 #define ZMK_GAMING_MAX_KEYS_PER_DEVICE 18
