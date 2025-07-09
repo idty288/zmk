@@ -789,8 +789,12 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
                 // If gaming system fails, fall through to normal processing
             }
             
-            // Fall back to normal processing
-            int ret = zmk_keymap_apply_position_state(source, layer_id, position, pressed, timestamp);
+            // FOR TESTING: If we reach here in gaming mode, it means the key wasn't handled by gaming system
+            // In this case, just return without processing to isolate gaming HID testing
+            return -ENOTSUP;
+            
+            // Fall back to normal processing (disabled for testing)
+            // int ret = zmk_keymap_apply_position_state(source, layer_id, position, pressed, timestamp);
             if (ret > 0) {
                 LOG_DBG("behavior processing to continue to next layer");
                 continue;
@@ -876,7 +880,7 @@ int keymap_listener(const zmk_event_t *eh) {
 #if IS_ENABLED(CONFIG_ZMK_HID_GAMING)
         // Check if gaming mode is active
         if (zmk_hid_gaming_is_active()) {
-            // Route to gaming HID handling
+            // Route to gaming HID handling - ONLY gaming HID, no normal processing
             return zmk_keymap_gaming_position_state_changed(pos_ev->source, pos_ev->position, 
                                                            pos_ev->state, pos_ev->timestamp);
         }

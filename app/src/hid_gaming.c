@@ -20,8 +20,8 @@
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-// Gaming mode state
-static bool gaming_mode_active = false;
+// Gaming mode state - TEMPORARILY ALWAYS ACTIVE FOR TESTING
+static bool gaming_mode_active = true;
 
 // Gaming keyboard reports for each device
 static struct zmk_gaming_keyboard_report gaming_reports[ZMK_GAMING_DEVICE_COUNT];
@@ -231,7 +231,12 @@ static int zmk_hid_gaming_init(void) {
     // Initialize gaming reports
     zmk_hid_gaming_init_reports();
 
-    LOG_INF("Gaming HID initialized with %d virtual devices", ZMK_GAMING_DEVICE_COUNT);
+    // Send initial empty reports to make Linux aware of all gaming devices
+    for (int i = 0; i < ZMK_GAMING_DEVICE_COUNT; i++) {
+        zmk_hid_gaming_send_report(i);
+    }
+
+    LOG_INF("Gaming HID initialized with %d virtual devices - ALWAYS ACTIVE FOR TESTING", ZMK_GAMING_DEVICE_COUNT);
     return 0;
 }
 
