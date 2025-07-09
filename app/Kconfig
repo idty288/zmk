@@ -116,6 +116,14 @@ config ZMK_HID_SEPARATE_MOD_RELEASE_REPORT
       Send a separate release event for the modifiers, to make sure the release
       of the modifier doesn't get recognized before the actual key's release event.
 
+config ZMK_HID_GAMING
+    bool "Gaming Multi-Device HID Support"
+    depends on ZMK_USB
+    help
+      Enable support for multiple USB HID devices during gaming layer activation.
+      This allows keys to be grouped into separate HID devices for game-specific
+      configurations. Only active when the game layer (layer 1) is enabled.
+
 menu "Output Types"
 
 config ZMK_USB

@@ -23,6 +23,12 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/events/layer_state_changed.h>
 #include <zmk/events/sensor_event.h>
 
+#if IS_ENABLED(CONFIG_ZMK_HID_GAMING)
+#include <zmk/hid_gaming.h>
+#include <zmk/hid.h>
+#include <zmk/usb_hid.h>
+#endif // CONFIG_ZMK_HID_GAMING
+
 static zmk_keymap_layers_state_t _zmk_keymap_layer_state = 0;
 static zmk_keymap_layer_id_t _zmk_keymap_layer_default = 0;
 
@@ -737,6 +743,71 @@ int zmk_keymap_position_state_changed(uint8_t source, uint32_t position, bool pr
     return -ENOTSUP;
 }
 
+#if IS_ENABLED(CONFIG_ZMK_HID_GAMING)
+int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, bool pressed,
+                                           int64_t timestamp) {
+    // First, handle the normal keymap processing to get the actual keycode
+    if (pressed) {
+        zmk_keymap_active_behavior_layer[position] = _zmk_keymap_layer_state;
+    }
+
+    // Process through normal keymap to get the key that would be sent
+    for (int layer_idx = ZMK_KEYMAP_LAYERS_LEN - 1;
+         layer_idx >= LAYER_ID_TO_INDEX(_zmk_keymap_layer_default); layer_idx--) {
+        zmk_keymap_layer_id_t layer_id = LAYER_INDEX_TO_ID(layer_idx);
+
+        if (layer_id == ZMK_KEYMAP_LAYER_ID_INVAL) {
+            continue;
+        }
+        if (zmk_keymap_layer_active_with_state(layer_id,
+                                               zmk_keymap_active_behavior_layer[position])) {
+            const struct zmk_behavior_binding *binding =
+                zmk_keymap_get_layer_binding_at_idx(layer_id, position);
+            
+            // Check if this is a key press behavior
+            if (strcmp(binding->behavior_dev, "KEY_PRESS") == 0 || 
+                strcmp(binding->behavior_dev, "kp") == 0) {
+                
+                // Get the device for this position
+                uint8_t device_id = zmk_hid_gaming_get_device_for_position(position);
+                
+                // Get the key code from the binding
+                zmk_key_t keycode = binding->param1;
+                
+                // Send to appropriate gaming device
+                int ret;
+                if (pressed) {
+                    ret = zmk_hid_gaming_keyboard_press(device_id, keycode);
+                } else {
+                    ret = zmk_hid_gaming_keyboard_release(device_id, keycode);
+                }
+                
+                if (ret < 0) {
+                    LOG_ERR("Gaming HID device %d failed to %s key %d: %d", 
+                           device_id, pressed ? "press" : "release", keycode, ret);
+                }
+                
+                return ret;
+            }
+            
+            // For non-key behaviors, fall back to normal processing
+            int ret = zmk_keymap_apply_position_state(source, layer_id, position, pressed, timestamp);
+            if (ret > 0) {
+                LOG_DBG("behavior processing to continue to next layer");
+                continue;
+            } else if (ret < 0) {
+                LOG_DBG("Behavior returned error: %d", ret);
+                return ret;
+            } else {
+                return ret;
+            }
+        }
+    }
+
+    return -ENOTSUP;
+}
+#endif // CONFIG_ZMK_HID_GAMING
+
 #if ZMK_KEYMAP_HAS_SENSORS
 int zmk_keymap_sensor_event(uint8_t sensor_index,
                             const struct zmk_sensor_channel_data *channel_data,
@@ -803,6 +874,14 @@ int zmk_keymap_sensor_event(uint8_t sensor_index,
 int keymap_listener(const zmk_event_t *eh) {
     const struct zmk_position_state_changed *pos_ev;
     if ((pos_ev = as_zmk_position_state_changed(eh)) != NULL) {
+#if IS_ENABLED(CONFIG_ZMK_HID_GAMING)
+        // Check if gaming mode is active
+        if (zmk_hid_gaming_is_active()) {
+            // Route to gaming HID handling
+            return zmk_keymap_gaming_position_state_changed(pos_ev->source, pos_ev->position, 
+                                                           pos_ev->state, pos_ev->timestamp);
+        }
+#endif // CONFIG_ZMK_HID_GAMING
         return zmk_keymap_position_state_changed(pos_ev->source, pos_ev->position, pos_ev->state,
                                                  pos_ev->timestamp);
     }
