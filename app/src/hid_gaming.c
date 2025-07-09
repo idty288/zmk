@@ -9,6 +9,7 @@
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/usb/class/usb_hid.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/kernel.h>
 #include <string.h>
 
 #include <zmk/hid_gaming.h>
@@ -208,15 +209,37 @@ struct zmk_gaming_keyboard_report *zmk_hid_gaming_get_keyboard_report(uint8_t de
 
 // Layer state change listener removed - gaming HID is always active now
 
+// Periodic keep-alive to ensure all gaming devices stay visible to Linux
+static void gaming_hid_keepalive_work_handler(struct k_work *work) {
+    // Send empty reports to all gaming devices to keep them active
+    for (int i = 0; i < ZMK_GAMING_DEVICE_COUNT; i++) {
+        zmk_hid_gaming_send_report(i);
+    }
+}
+
+K_WORK_DEFINE(gaming_hid_keepalive_work, gaming_hid_keepalive_work_handler);
+
+static void gaming_hid_keepalive_timer_handler(struct k_timer *timer) {
+    k_work_submit(&gaming_hid_keepalive_work);
+}
+
+K_TIMER_DEFINE(gaming_hid_keepalive_timer, gaming_hid_keepalive_timer_handler, NULL);
+
 // Initialize gaming HID system  
 static int zmk_hid_gaming_init(void) {
     // Initialize gaming reports
     zmk_hid_gaming_init_reports();
 
-    // Send initial empty reports to make Linux aware of all gaming devices
-    for (int i = 0; i < ZMK_GAMING_DEVICE_COUNT; i++) {
-        zmk_hid_gaming_send_report(i);
+    // Send initial empty reports multiple times to make Linux aware of all gaming devices
+    for (int j = 0; j < 3; j++) {
+        for (int i = 0; i < ZMK_GAMING_DEVICE_COUNT; i++) {
+            zmk_hid_gaming_send_report(i);
+        }
+        k_sleep(K_MSEC(10)); // Small delay between batches
     }
+
+    // Start periodic keep-alive timer (every 5 seconds)
+    k_timer_start(&gaming_hid_keepalive_timer, K_SECONDS(5), K_SECONDS(5));
 
     LOG_INF("Gaming HID initialized with %d virtual devices - always active for global position-based split", ZMK_GAMING_DEVICE_COUNT);
     return 0;

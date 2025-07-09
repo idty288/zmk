@@ -747,10 +747,7 @@ int zmk_keymap_position_state_changed(uint8_t source, uint32_t position, bool pr
 #if IS_ENABLED(CONFIG_ZMK_HID_GAMING)
 int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, bool pressed,
                                            int64_t timestamp) {
-    // Always do normal keymap processing first - this handles all Miryoku functionality
-    int normal_result = zmk_keymap_position_state_changed(source, position, pressed, timestamp);
-    
-    // Additionally, try to route simple key presses to gaming HID devices based on position
+    // Handle gaming HID routing - ONLY gaming HID, no normal processing
     if (pressed) {
         zmk_keymap_active_behavior_layer[position] = _zmk_keymap_layer_state;
     }
@@ -771,24 +768,38 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
             // Get the device for this position
             uint8_t device_id = zmk_hid_gaming_get_device_for_position(position);
             
-            // Check if this looks like a simple key press that we can also send to gaming HID
-            if (binding->param1 > 0 && binding->param1 < 256) {
-                // Send to gaming HID as well (parallel to normal processing)
+            // Debug: log all behavior names to understand what we're getting
+            LOG_DBG("Position %d: behavior_dev='%s', param1=%d, param2=%d", 
+                    position, binding->behavior_dev ? binding->behavior_dev : "NULL", 
+                    binding->param1, binding->param2);
+            
+            // Check if this is a simple key press behavior (&kp) - route to gaming HID
+            if (binding->behavior_dev && 
+                (strstr(binding->behavior_dev, "key_press") != NULL)) {
+                // This is a &kp behavior - route to gaming HID
                 LOG_DBG("Gaming HID: pos=%d, device_id=%d, key=0x%02x, pressed=%d", 
                         position, device_id, binding->param1, pressed);
+                
+                int ret;
                 if (pressed) {
-                    zmk_hid_gaming_keyboard_press(device_id, binding->param1);
+                    ret = zmk_hid_gaming_keyboard_press(device_id, binding->param1);
                 } else {
-                    zmk_hid_gaming_keyboard_release(device_id, binding->param1);
+                    ret = zmk_hid_gaming_keyboard_release(device_id, binding->param1);
+                }
+                
+                if (ret == 0) {
+                    // Successfully handled by gaming system - return success
+                    return 0;
                 }
             }
             
-            // Always return the normal processing result
-            return normal_result;
+            // If gaming HID failed, fall back to normal processing
+            return zmk_keymap_position_state_changed(source, position, pressed, timestamp);
         }
     }
 
-    return normal_result;
+    // If no layer matched, fall back to normal processing
+    return zmk_keymap_position_state_changed(source, position, pressed, timestamp);
 }
 #endif // CONFIG_ZMK_HID_GAMING
 
