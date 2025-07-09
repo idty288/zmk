@@ -773,7 +773,6 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
             // We can expand this logic later to handle more behavior types
             if (binding->param1 > 0 && binding->param1 < 256) {
                 // This looks like it could be a key code, attempt gaming HID routing
-                LOG_DBG("Gaming mode: position %d -> device %d, key %d", position, device_id, binding->param1);
                 
                 int ret;
                 if (pressed) {
@@ -783,7 +782,8 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
                 }
                 
                 if (ret == 0) {
-                    // Successfully handled by gaming system
+                    // Successfully handled by gaming system - DO NOT fall through to normal processing
+                    // This ensures only the gaming HID gets the key event
                     return 0;
                 }
                 // If gaming system fails, fall through to normal processing

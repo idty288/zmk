@@ -86,6 +86,10 @@ static int zmk_hid_gaming_send_report(uint8_t device_id) {
     size_t report_size = sizeof(struct zmk_gaming_keyboard_report);
     
     // Use ZMK's USB HID send function - this will send our custom report
+    LOG_DBG("Sending gaming report: device_id=%d, report_id=0x%02x, keys=[%02x,%02x,%02x,%02x,%02x,%02x]", 
+            device_id, report->report_id, 
+            report->body.keys[0], report->body.keys[1], report->body.keys[2], 
+            report->body.keys[3], report->body.keys[4], report->body.keys[5]);
     return zmk_usb_hid_send_report((uint8_t *)report, report_size);
 #else
     return 0;
@@ -101,10 +105,15 @@ void zmk_hid_gaming_set_active(bool active) {
     if (gaming_mode_active != active) {
         gaming_mode_active = active;
         if (active) {
-            LOG_INF("Gaming HID mode activated");
+            // Clear all gaming reports
             zmk_hid_gaming_keyboard_clear_all();
+            
+            // Send an empty report for each gaming device to make Linux aware of them
+            for (int i = 0; i < ZMK_GAMING_DEVICE_COUNT; i++) {
+                zmk_hid_gaming_send_report(i);
+            }
         } else {
-            LOG_INF("Gaming HID mode deactivated");
+            // Send empty reports to clear all gaming devices
             zmk_hid_gaming_keyboard_clear_all();
         }
     }
