@@ -774,6 +774,8 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
             // Check if this looks like a simple key press that we can also send to gaming HID
             if (binding->param1 > 0 && binding->param1 < 256) {
                 // Send to gaming HID as well (parallel to normal processing)
+                LOG_DBG("Gaming HID: pos=%d, device_id=%d, key=0x%02x, pressed=%d", 
+                        position, device_id, binding->param1, pressed);
                 if (pressed) {
                     zmk_hid_gaming_keyboard_press(device_id, binding->param1);
                 } else {

@@ -70,7 +70,7 @@ static void zmk_hid_gaming_init_reports(void) {
 
 // Send gaming HID report using ZMK's USB HID infrastructure
 static int zmk_hid_gaming_send_report(uint8_t device_id) {
-    if (device_id >= ZMK_GAMING_DEVICE_COUNT || !gaming_mode_active) {
+    if (device_id >= ZMK_GAMING_DEVICE_COUNT) {
         return -EINVAL;
     }
 
@@ -120,7 +120,7 @@ void zmk_hid_gaming_set_active(bool active) {
 
 // Gaming keyboard functions
 int zmk_hid_gaming_keyboard_press(uint8_t device_id, zmk_key_t key) {
-    if (device_id >= ZMK_GAMING_DEVICE_COUNT || !gaming_mode_active) {
+    if (device_id >= ZMK_GAMING_DEVICE_COUNT) {
         return -EINVAL;
     }
 
@@ -141,7 +141,7 @@ int zmk_hid_gaming_keyboard_press(uint8_t device_id, zmk_key_t key) {
 }
 
 int zmk_hid_gaming_keyboard_release(uint8_t device_id, zmk_key_t key) {
-    if (device_id >= ZMK_GAMING_DEVICE_COUNT || !gaming_mode_active) {
+    if (device_id >= ZMK_GAMING_DEVICE_COUNT) {
         return -EINVAL;
     }
 
@@ -170,9 +170,7 @@ void zmk_hid_gaming_keyboard_clear(uint8_t device_id) {
     struct zmk_gaming_keyboard_report *report = &gaming_reports[device_id];
     memset(report->body.keys, 0, ZMK_GAMING_MAX_KEYS_PER_DEVICE);
     
-    if (gaming_mode_active) {
-        zmk_hid_gaming_send_report(device_id);
-    }
+    zmk_hid_gaming_send_report(device_id);
 }
 
 void zmk_hid_gaming_keyboard_clear_all(void) {
@@ -182,7 +180,7 @@ void zmk_hid_gaming_keyboard_clear_all(void) {
 }
 
 int zmk_hid_gaming_register_mod(uint8_t device_id, zmk_mod_t modifier) {
-    if (device_id >= ZMK_GAMING_DEVICE_COUNT || !gaming_mode_active) {
+    if (device_id >= ZMK_GAMING_DEVICE_COUNT) {
         return -EINVAL;
     }
 
@@ -192,7 +190,7 @@ int zmk_hid_gaming_register_mod(uint8_t device_id, zmk_mod_t modifier) {
 }
 
 int zmk_hid_gaming_unregister_mod(uint8_t device_id, zmk_mod_t modifier) {
-    if (device_id >= ZMK_GAMING_DEVICE_COUNT || !gaming_mode_active) {
+    if (device_id >= ZMK_GAMING_DEVICE_COUNT) {
         return -EINVAL;
     }
 
