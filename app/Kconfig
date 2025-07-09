@@ -118,7 +118,7 @@ config ZMK_HID_SEPARATE_MOD_RELEASE_REPORT
 
 config ZMK_HID_GAMING
     bool "Gaming Multi-Device HID Support"
-    depends on ZMK_USB
+    depends on ZMK_USB && ZMK_HID_REPORT_TYPE_HKRO
     help
       Enable support for multiple USB HID devices during gaming layer activation.
       This allows keys to be grouped into separate HID devices for game-specific

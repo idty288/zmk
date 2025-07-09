@@ -206,7 +206,7 @@ static int gaming_layer_state_changed_listener(const zmk_event_t *eh) {
 ZMK_LISTENER(gaming_layer_listener, gaming_layer_state_changed_listener);
 ZMK_SUBSCRIPTION(gaming_layer_listener, zmk_layer_state_changed);
 
-// Initialize gaming HID system
+// Initialize gaming HID system  
 static int zmk_hid_gaming_init(void) {
     // Initialize gaming reports
     zmk_hid_gaming_init_reports();
@@ -215,4 +215,5 @@ static int zmk_hid_gaming_init(void) {
     return 0;
 }
 
-SYS_INIT(zmk_hid_gaming_init, APPLICATION, CONFIG_ZMK_USB_HID_INIT_PRIORITY + 1);
+// Temporarily comment out SYS_INIT for debugging
+// SYS_INIT(zmk_hid_gaming_init, APPLICATION, 96);
