@@ -44,7 +44,7 @@ static uint8_t gaming_pressed_keys[GAMING_MAX_POSITIONS];
 // Device 5: Both thumb clusters (separate from rest)
 uint8_t zmk_hid_gaming_get_device_for_position(uint32_t position) {
     switch (position) {
-        // Left hand alphas: q,w,e,r,t,a,s,d,f,g,z,x,c,v,b
+        // Left hand alphas: q,w,e,r,t,a,s,d,f,g,z,x,c,v,b (positions 0-4, 12-16, 24-28)
         case 0:  // Q
         case 1:  // W  
         case 2:  // E
@@ -62,40 +62,43 @@ uint8_t zmk_hid_gaming_get_device_for_position(uint32_t position) {
         case 28: // B
             return ZMK_GAMING_DEVICE_LEFT_HALF;
             
-        // Right index top row: Y,U
-        case 5:  // Y
-        case 6:  // U
+        // Right index top row: Y,U (positions 6,7)
+        case 6:  // Y
+        case 7:  // U
             return ZMK_GAMING_DEVICE_GROUP_YU;
             
-        // Right index home row: H,J
-        case 17: // H
-        case 18: // J
+        // Right index home row: H,J (positions 18,19)
+        case 18: // H
+        case 19: // J
             return ZMK_GAMING_DEVICE_GROUP_HJ;
             
-        // Right index bottom row: N,M
-        case 29: // N
-        case 30: // M
+        // Right index bottom row: N,M (positions 30,31)
+        case 30: // N
+        case 31: // M
             return ZMK_GAMING_DEVICE_GROUP_NM;
             
-        // Both thumb clusters (left + right)
-        case 33: // Left thumb 1
-        case 34: // Left thumb 2  
-        case 35: // Left thumb 3
-        case 36: // Right thumb 1
-        case 37: // Right thumb 2
-        case 38: // Right thumb 3
+        // Both thumb clusters (positions 36-41)
+        case 36: // Left thumb 1
+        case 37: // Left thumb 2  
+        case 38: // Left thumb 3
+        case 39: // Right thumb 1
+        case 40: // Right thumb 2
+        case 41: // Right thumb 3
             return ZMK_GAMING_DEVICE_THUMBS;
             
-        // Rest of right side: I,O,P,K,L,',,,.,/
-        case 7:  // I
-        case 8:  // O
-        case 9:  // P
-        case 19: // K
-        case 20: // L
-        case 21: // '
-        case 31: // ,
-        case 32: // .
-        case 23: // /
+        // Rest of right side: I,O,P,K,L,',,,.,/ (positions 8-11, 20-23, 32-35)
+        case 8:  // I
+        case 9:  // O
+        case 10: // P
+        case 11: // [ or ;
+        case 20: // K
+        case 21: // L
+        case 22: // ;
+        case 23: // '
+        case 32: // ,
+        case 33: // .
+        case 34: // /
+        case 35: // Right shift or similar
         default:
             return ZMK_GAMING_DEVICE_GROUP_REST;
     }
