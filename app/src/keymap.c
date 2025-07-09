@@ -747,7 +747,10 @@ int zmk_keymap_position_state_changed(uint8_t source, uint32_t position, bool pr
 #if IS_ENABLED(CONFIG_ZMK_HID_GAMING)
 int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, bool pressed,
                                            int64_t timestamp) {
-    // First, handle the normal keymap processing to get the actual keycode
+    // Always do normal keymap processing first - this handles all Miryoku functionality
+    int normal_result = zmk_keymap_position_state_changed(source, position, pressed, timestamp);
+    
+    // Additionally, try to route simple key presses to gaming HID devices based on position
     if (pressed) {
         zmk_keymap_active_behavior_layer[position] = _zmk_keymap_layer_state;
     }
@@ -762,40 +765,28 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
         }
         if (zmk_keymap_layer_active_with_state(layer_id,
                                                zmk_keymap_active_behavior_layer[position])) {
-            // In gaming mode, we attempt to route specific key events to gaming devices
             const struct zmk_behavior_binding *binding =
                 zmk_keymap_get_layer_binding_at_idx(layer_id, position);
             
             // Get the device for this position
             uint8_t device_id = zmk_hid_gaming_get_device_for_position(position);
             
-            // Check if this looks like a simple key press (most behaviors will fall through)
-            // We can expand this logic later to handle more behavior types
+            // Check if this looks like a simple key press that we can also send to gaming HID
             if (binding->param1 > 0 && binding->param1 < 256) {
-                // This looks like it could be a key code, attempt gaming HID routing
-                
-                int ret;
+                // Send to gaming HID as well (parallel to normal processing)
                 if (pressed) {
-                    ret = zmk_hid_gaming_keyboard_press(device_id, binding->param1);
+                    zmk_hid_gaming_keyboard_press(device_id, binding->param1);
                 } else {
-                    ret = zmk_hid_gaming_keyboard_release(device_id, binding->param1);
+                    zmk_hid_gaming_keyboard_release(device_id, binding->param1);
                 }
-                
-                if (ret == 0) {
-                    // Successfully handled by gaming system - DO NOT fall through to normal processing
-                    // This ensures only the gaming HID gets the key event
-                    return 0;
-                }
-                // If gaming system fails, fall through to normal processing
             }
             
-            // If we reach here in gaming mode, it means the key wasn't handled by gaming system
-            // Fall through to normal behavior processing
-            return zmk_keymap_position_state_changed(source, position, pressed, timestamp);
+            // Always return the normal processing result
+            return normal_result;
         }
     }
 
-    return -ENOTSUP;
+    return normal_result;
 }
 #endif // CONFIG_ZMK_HID_GAMING
 
@@ -866,15 +857,13 @@ int keymap_listener(const zmk_event_t *eh) {
     const struct zmk_position_state_changed *pos_ev;
     if ((pos_ev = as_zmk_position_state_changed(eh)) != NULL) {
 #if IS_ENABLED(CONFIG_ZMK_HID_GAMING)
-        // Check if gaming mode is active
-        if (zmk_hid_gaming_is_active()) {
-            // Route to gaming HID handling - ONLY gaming HID, no normal processing
-            return zmk_keymap_gaming_position_state_changed(pos_ev->source, pos_ev->position, 
-                                                           pos_ev->state, pos_ev->timestamp);
-        }
-#endif // CONFIG_ZMK_HID_GAMING
+        // Always route to gaming HID handling - global position-based split
+        return zmk_keymap_gaming_position_state_changed(pos_ev->source, pos_ev->position, 
+                                                       pos_ev->state, pos_ev->timestamp);
+#else
         return zmk_keymap_position_state_changed(pos_ev->source, pos_ev->position, pos_ev->state,
                                                  pos_ev->timestamp);
+#endif // CONFIG_ZMK_HID_GAMING
     }
 
 #if ZMK_KEYMAP_HAS_SENSORS

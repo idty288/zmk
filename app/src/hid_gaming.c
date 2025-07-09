@@ -15,13 +15,12 @@
 #include <zmk/keymap.h>
 #include <zmk/event_manager.h>
 #include <zmk/events/position_state_changed.h>
-#include <zmk/events/layer_state_changed.h>
 #include <zmk/usb_hid.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-// Gaming mode state
-static bool gaming_mode_active = false;
+// Gaming mode state - always active for global position-based split
+static bool gaming_mode_active = true;
 
 // Gaming keyboard reports for each device
 static struct zmk_gaming_keyboard_report gaming_reports[ZMK_GAMING_DEVICE_COUNT];
@@ -209,22 +208,7 @@ struct zmk_gaming_keyboard_report *zmk_hid_gaming_get_keyboard_report(uint8_t de
     return &gaming_reports[device_id];
 }
 
-// Layer state change listener to detect game layer activation
-static int gaming_layer_state_changed_listener(const zmk_event_t *eh) {
-    const struct zmk_layer_state_changed *ev = as_zmk_layer_state_changed(eh);
-    if (ev == NULL) {
-        return ZMK_EV_EVENT_BUBBLE;
-    }
-
-    // Check if layer 1 (U_GAME) is activated/deactivated
-    bool game_layer_active = (ev->state & BIT(1)) != 0; // Layer 1 is the game layer
-    zmk_hid_gaming_set_active(game_layer_active);
-
-    return ZMK_EV_EVENT_BUBBLE;
-}
-
-ZMK_LISTENER(gaming_layer_listener, gaming_layer_state_changed_listener);
-ZMK_SUBSCRIPTION(gaming_layer_listener, zmk_layer_state_changed);
+// Layer state change listener removed - gaming HID is always active now
 
 // Initialize gaming HID system  
 static int zmk_hid_gaming_init(void) {
@@ -236,7 +220,7 @@ static int zmk_hid_gaming_init(void) {
         zmk_hid_gaming_send_report(i);
     }
 
-    LOG_INF("Gaming HID initialized with %d virtual devices", ZMK_GAMING_DEVICE_COUNT);
+    LOG_INF("Gaming HID initialized with %d virtual devices - always active for global position-based split", ZMK_GAMING_DEVICE_COUNT);
     return 0;
 }
 
