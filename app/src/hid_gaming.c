@@ -26,6 +26,9 @@ static bool gaming_mode_active = true;
 // Gaming keyboard reports for each device
 static struct zmk_gaming_keyboard_report gaming_reports[ZMK_GAMING_DEVICE_COUNT];
 
+// Track which keys are currently pressed in gaming HID (position -> key mapping)
+static uint8_t gaming_pressed_keys[ZMK_KEYMAP_LEN];
+
 // We'll use ZMK's existing USB HID infrastructure
 
 // Position to device mapping for Corne 42-key layout
@@ -207,6 +210,39 @@ struct zmk_gaming_keyboard_report *zmk_hid_gaming_get_keyboard_report(uint8_t de
     return &gaming_reports[device_id];
 }
 
+// Position-based gaming HID handling with tracking
+int zmk_hid_gaming_position_press(uint32_t position, zmk_key_t key) {
+    if (position >= ZMK_KEYMAP_LEN) {
+        return -EINVAL;
+    }
+    
+    uint8_t device_id = zmk_hid_gaming_get_device_for_position(position);
+    
+    // Track that this position sent a key to gaming HID
+    gaming_pressed_keys[position] = key;
+    
+    return zmk_hid_gaming_keyboard_press(device_id, key);
+}
+
+int zmk_hid_gaming_position_release(uint32_t position) {
+    if (position >= ZMK_KEYMAP_LEN) {
+        return -EINVAL;
+    }
+    
+    // Only release if we tracked a press for this position
+    if (gaming_pressed_keys[position] == 0) {
+        return 0; // Nothing to release
+    }
+    
+    uint8_t device_id = zmk_hid_gaming_get_device_for_position(position);
+    zmk_key_t key = gaming_pressed_keys[position];
+    
+    // Clear the tracking
+    gaming_pressed_keys[position] = 0;
+    
+    return zmk_hid_gaming_keyboard_release(device_id, key);
+}
+
 // Layer state change listener removed - gaming HID is always active now
 
 // Periodic keep-alive to ensure all gaming devices stay visible to Linux
@@ -229,6 +265,9 @@ K_TIMER_DEFINE(gaming_hid_keepalive_timer, gaming_hid_keepalive_timer_handler, N
 static int zmk_hid_gaming_init(void) {
     // Initialize gaming reports
     zmk_hid_gaming_init_reports();
+    
+    // Initialize position tracking
+    memset(gaming_pressed_keys, 0, sizeof(gaming_pressed_keys));
 
     // Send initial empty reports multiple times to make Linux aware of all gaming devices
     for (int j = 0; j < 3; j++) {

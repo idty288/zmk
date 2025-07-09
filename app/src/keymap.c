@@ -772,23 +772,15 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
             // Get the device for this position
             uint8_t device_id = zmk_hid_gaming_get_device_for_position(position);
             
-            // Debug: log all behavior names to understand what we're getting
-            LOG_DBG("Position %d: behavior_dev='%s', param1=%d, param2=%d", 
-                    position, binding->behavior_dev ? binding->behavior_dev : "NULL", 
-                    binding->param1, binding->param2);
-            
             // Check if this is a simple key press behavior (&kp) - route to gaming HID
             if (binding->behavior_dev && 
                 (strstr(binding->behavior_dev, "key_press") != NULL)) {
-                // This is a &kp behavior - route to gaming HID
-                LOG_DBG("Gaming HID: pos=%d, device_id=%d, key=0x%02x, pressed=%d", 
-                        position, device_id, binding->param1, pressed);
-                
+                // This is a &kp behavior - route to gaming HID with position tracking
                 int ret;
                 if (pressed) {
-                    ret = zmk_hid_gaming_keyboard_press(device_id, binding->param1);
+                    ret = zmk_hid_gaming_position_press(position, binding->param1);
                 } else {
-                    ret = zmk_hid_gaming_keyboard_release(device_id, binding->param1);
+                    ret = zmk_hid_gaming_position_release(position);
                 }
                 
                 if (ret == 0) {

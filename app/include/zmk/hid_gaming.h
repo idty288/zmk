@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <zephyr/usb/usb_ch9.h>
 #include <zephyr/usb/class/usb_hid.h>
 #include <zmk/keys.h>
 #include <dt-bindings/zmk/hid_usage.h>
@@ -49,6 +50,10 @@ int zmk_hid_gaming_keyboard_press(uint8_t device_id, zmk_key_t key);
 int zmk_hid_gaming_keyboard_release(uint8_t device_id, zmk_key_t key);
 void zmk_hid_gaming_keyboard_clear(uint8_t device_id);
 void zmk_hid_gaming_keyboard_clear_all(void);
+
+// Position-based gaming HID functions with tracking
+int zmk_hid_gaming_position_press(uint32_t position, zmk_key_t key);
+int zmk_hid_gaming_position_release(uint32_t position);
 
 int zmk_hid_gaming_register_mod(uint8_t device_id, zmk_mod_t modifier);
 int zmk_hid_gaming_unregister_mod(uint8_t device_id, zmk_mod_t modifier);
