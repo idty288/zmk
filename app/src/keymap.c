@@ -789,9 +789,9 @@ int zmk_keymap_gaming_position_state_changed(uint8_t source, uint32_t position, 
                 // If gaming system fails, fall through to normal processing
             }
             
-            // FOR TESTING: If we reach here in gaming mode, it means the key wasn't handled by gaming system
-            // In this case, just return without processing to isolate gaming HID testing
-            return -ENOTSUP;
+            // If we reach here in gaming mode, it means the key wasn't handled by gaming system
+            // Fall through to normal behavior processing
+            return zmk_keymap_position_state_changed(source, position, pressed, timestamp);
         }
     }
 
