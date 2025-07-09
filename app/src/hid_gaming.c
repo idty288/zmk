@@ -43,12 +43,18 @@ static uint8_t gaming_pressed_keys[GAMING_MAX_POSITIONS];
 // Device 4: Rest of right side [i,o,p,k,l,',,,.,/]
 // Device 5: Both thumb clusters (separate from rest)
 uint8_t zmk_hid_gaming_get_device_for_position(uint32_t position) {
-    // Based on Miryoku Corne mapping - only positions 1-5, 6-10, 13-17, 18-22, 25-29, 30-34, 37-39, 40-42 are used
+    // New refined grouping based on user request:
+    // Device 0: Left hand [w,s,x] - positions 2,14,26
+    // Device 1: Right index [y,u] - positions 6,7
+    // Device 2: Right index [h,j] - positions 18,19
+    // Device 3: Right index [n,m] - positions 30,31
+    // Device 4: Rest group [q,a,z,t,g,b,c] + right side [i,o,p,k,l,;,',,,.,/] - positions 1,13,25,5,17,29,27 + 8-10,20-22,32-34
+    // Device 5: Both thumb clusters - positions 37-39,40-42
+    // Device 6: Left hand [e,d] - positions 3,15
+    // Device 7: Left hand [r,f,v] - positions 4,16,28
     switch (position) {
-        // Left hand alphas: Q,W,E,R,T,A,S,D,F,G,Z,X,C,V,B
-        case 1: case 2: case 3: case 4: case 5:     // Q,W,E,R,T (positions 1-5)
-        case 13: case 14: case 15: case 16: case 17: // A,S,D,F,G (positions 13-17)
-        case 25: case 26: case 27: case 28: case 29: // Z,X,C,V,B (positions 25-29)
+        // Left hand group [w,s,x]
+        case 2: case 14: case 26:     // W,S,X
             return ZMK_GAMING_DEVICE_LEFT_HALF;
             
         // Right index Y,U (positions 6,7)
@@ -67,10 +73,21 @@ uint8_t zmk_hid_gaming_get_device_for_position(uint32_t position) {
         case 37: case 38: case 39: case 40: case 41: case 42:
             return ZMK_GAMING_DEVICE_THUMBS;
             
-        // Rest of right side: I,O,P,K,L,;,',,,.,/
-        case 8: case 9: case 10:       // I,O,P (positions 8-10)
-        case 20: case 21: case 22:     // K,L,; (positions 20-22)
-        case 32: case 33: case 34:     // ,,./ (positions 32-34)
+        // Left hand group [e,d] - device 6
+        case 3: case 15:              // E,D
+            return ZMK_GAMING_DEVICE_GROUP_ED;
+            
+        // Left hand group [r,f,v] - device 7
+        case 4: case 16: case 28:     // R,F,V
+            return ZMK_GAMING_DEVICE_GROUP_RFV;
+            
+        // Rest group: [q,a,z,t,g,b,c] + right side [i,o,p,k,l,;,',,,.,/]
+        case 1: case 13: case 25:     // Q,A,Z (left columns)
+        case 5: case 17: case 29:     // T,G,B (left columns)
+        case 27:                      // C
+        case 8: case 9: case 10:      // I,O,P (right side)
+        case 20: case 21: case 22:    // K,L,; (right side)
+        case 32: case 33: case 34:    // ,,./ (right side)
         default:
             return ZMK_GAMING_DEVICE_GROUP_REST;
     }
