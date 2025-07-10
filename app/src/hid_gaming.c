@@ -35,61 +35,24 @@ static uint8_t gaming_pressed_keys[GAMING_MAX_POSITIONS];
 // We'll use ZMK's existing USB HID infrastructure
 
 // Position to device mapping for Corne 42-key layout
-// Corrected grouping as requested by user:
-// Device 0: Left hand alphas [q,w,e,r,t,a,s,d,f,g,z,x,c,v,b]
-// Device 1: Right index [y,u] 
-// Device 2: Right index [h,j]
-// Device 3: Right index [n,m]
-// Device 4: Rest of right side [i,o,p,k,l,',,,.,/]
-// Device 5: Both thumb clusters (separate from rest)
+// Consolidated grouping: YU, HJ, NM groups maintained, everything else in main group
 uint8_t zmk_hid_gaming_get_device_for_position(uint32_t position) {
-    // New refined grouping based on user request:
-    // Device 0: Left hand [w,s,x] - positions 2,14,26
-    // Device 1: Right index [y,u] - positions 6,7
-    // Device 2: Right index [h,j] - positions 18,19
-    // Device 3: Right index [n,m] - positions 30,31
-    // Device 4: Rest group [q,a,z,t,g,b,c] + right side [i,o,p,k,l,;,',,,.,/] - positions 1,13,25,5,17,29,27 + 8-10,20-22,32-34
-    // Device 5: Both thumb clusters - positions 37-39,40-42
-    // Device 6: Left hand [e,d] - positions 3,15
-    // Device 7: Left hand [r,f,v] - positions 4,16,28
     switch (position) {
-        // Left hand group [w,s,x]
-        case 2: case 14: case 26:     // W,S,X
-            return ZMK_GAMING_DEVICE_LEFT_HALF;
-            
-        // Right index Y,U (positions 6,7)
+        // YU group (positions 6,7)
         case 6: case 7:
             return ZMK_GAMING_DEVICE_GROUP_YU;
             
-        // Right index H,J (positions 18,19)  
+        // HJ group (positions 18,19)  
         case 18: case 19:
             return ZMK_GAMING_DEVICE_GROUP_HJ;
             
-        // Right index N,M (positions 30,31)
+        // NM group (positions 30,31)
         case 30: case 31:
             return ZMK_GAMING_DEVICE_GROUP_NM;
             
-        // Thumb clusters (positions 37-39, 40-42)
-        case 37: case 38: case 39: case 40: case 41: case 42:
-            return ZMK_GAMING_DEVICE_THUMBS;
-            
-        // Left hand group [e,d] - device 6
-        case 3: case 15:              // E,D
-            return ZMK_GAMING_DEVICE_GROUP_ED;
-            
-        // Left hand group [r,f,v] - device 7
-        case 4: case 16: case 28:     // R,F,V
-            return ZMK_GAMING_DEVICE_GROUP_RFV;
-            
-        // Rest group: [q,a,z,t,g,b,c] + right side [i,o,p,k,l,;,',,,.,/]
-        case 1: case 13: case 25:     // Q,A,Z (left columns)
-        case 5: case 17: case 29:     // T,G,B (left columns)
-        case 27:                      // C
-        case 8: case 9: case 10:      // I,O,P (right side)
-        case 20: case 21: case 22:    // K,L,; (right side)
-        case 32: case 33: case 34:    // ,,./ (right side)
+        // Main group: all other keys
         default:
-            return ZMK_GAMING_DEVICE_GROUP_REST;
+            return ZMK_GAMING_DEVICE_MAIN;
     }
 }
 
@@ -99,7 +62,7 @@ uint8_t zmk_hid_gaming_get_device_for_position(uint32_t position) {
 static void zmk_hid_gaming_init_reports(void) {
     for (int i = 0; i < ZMK_GAMING_DEVICE_COUNT; i++) {
         memset(&gaming_reports[i], 0, sizeof(struct zmk_gaming_keyboard_report));
-        gaming_reports[i].report_id = ZMK_HID_GAMING_REPORT_ID_LEFT_HALF + i;
+        gaming_reports[i].report_id = ZMK_HID_GAMING_REPORT_ID_MAIN + i;
     }
 }
 
@@ -114,7 +77,7 @@ static int zmk_hid_gaming_send_report(uint8_t device_id) {
     struct zmk_gaming_keyboard_report *report = &gaming_reports[device_id];
     
     // Make sure report ID is set correctly
-    report->report_id = ZMK_HID_GAMING_REPORT_ID_LEFT_HALF + device_id;
+    report->report_id = ZMK_HID_GAMING_REPORT_ID_MAIN + device_id;
     
     // Send the report through the USB HID endpoint
     size_t report_size = sizeof(struct zmk_gaming_keyboard_report);

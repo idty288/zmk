@@ -13,33 +13,21 @@
 #include <dt-bindings/zmk/hid_usage_pages.h>
 
 // Gaming HID Report IDs (non-conflicting with standard HID)
-#define ZMK_HID_GAMING_REPORT_ID_LEFT_HALF    0x10
+#define ZMK_HID_GAMING_REPORT_ID_MAIN         0x10
 #define ZMK_HID_GAMING_REPORT_ID_GROUP_YU     0x11
 #define ZMK_HID_GAMING_REPORT_ID_GROUP_HJ     0x12
 #define ZMK_HID_GAMING_REPORT_ID_GROUP_NM     0x13
-#define ZMK_HID_GAMING_REPORT_ID_GROUP_REST   0x14
-#define ZMK_HID_GAMING_REPORT_ID_THUMBS       0x15
-#define ZMK_HID_GAMING_REPORT_ID_GROUP_ED     0x16
-#define ZMK_HID_GAMING_REPORT_ID_GROUP_RFV    0x17
 
-// Gaming device indices - refined grouping as requested:
-// Device 0: Left hand [w,s,x] 
-// Device 1: Right index [y,u]
-// Device 2: Right index [h,j]
-// Device 3: Right index [n,m]
-// Device 4: Rest group [q,a,z,t,g,b,c] + right side [i,o,p,k,l,;,',,,.,/]
-// Device 5: Both thumb clusters
-// Device 6: Left hand [e,d] 
-// Device 7: Left hand [r,f,v]
-#define ZMK_GAMING_DEVICE_LEFT_HALF    0  // Left hand [w,s,x]
-#define ZMK_GAMING_DEVICE_GROUP_YU     1  // Right index [y,u]
-#define ZMK_GAMING_DEVICE_GROUP_HJ     2  // Right index [h,j]
-#define ZMK_GAMING_DEVICE_GROUP_NM     3  // Right index [n,m]
-#define ZMK_GAMING_DEVICE_GROUP_REST   4  // Rest group + right side
-#define ZMK_GAMING_DEVICE_THUMBS       5  // Both thumb clusters
-#define ZMK_GAMING_DEVICE_GROUP_ED     6  // Left hand [e,d]
-#define ZMK_GAMING_DEVICE_GROUP_RFV    7  // Left hand [r,f,v]
-#define ZMK_GAMING_DEVICE_COUNT        8
+// Gaming device indices - consolidated grouping:
+// Device 0: Main group (all keys except YU, HJ, NM)
+// Device 1: YU group [y,u]
+// Device 2: HJ group [h,j]
+// Device 3: NM group [n,m]
+#define ZMK_GAMING_DEVICE_MAIN         0  // Main group (all other keys)
+#define ZMK_GAMING_DEVICE_GROUP_YU     1  // YU group [y,u]
+#define ZMK_GAMING_DEVICE_GROUP_HJ     2  // HJ group [h,j]
+#define ZMK_GAMING_DEVICE_GROUP_NM     3  // NM group [n,m]
+#define ZMK_GAMING_DEVICE_COUNT        4
 
 // Maximum keys per gaming device
 #define ZMK_GAMING_MAX_KEYS_PER_DEVICE 18
